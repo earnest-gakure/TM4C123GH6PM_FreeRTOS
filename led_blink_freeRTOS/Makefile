@@ -47,7 +47,15 @@ PARTCLASSCMSIS=TM4C123
 #
 # Source files
 #
-SRCFILES=libs/startup_tm4c123.c libs/system_tm4c123.c src/main.c
+#SRCFILES=libs/startup_tm4c123.c libs/system_tm4c123.c src/main.c
+SRCFILES=libs/startup_tm4c123.c libs/system_tm4c123.c src/main.c \
+         FreeRTOS/Source/tasks.c \
+         FreeRTOS/Source/queue.c \
+         FreeRTOS/Source/list.c \
+         FreeRTOS/Source/timers.c \
+         FreeRTOS/Source/event_groups.c \
+         FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c \
+         FreeRTOS/Source/portable/MemMang/heap_4.c
 
 #
 # Include the common make definitions.
@@ -206,7 +214,8 @@ OBJFILES=$(addprefix ${OBJDIR}/,$(SRCFILES:.c=.o))
 #
 # Include path
 #
-INCLUDEPATH=CMSIS inc
+#INCLUDEPATH=CMSIS inc
+INCLUDEPATH=CMSIS inc FreeRTOS/Source/include FreeRTOS/Source/portable/GCC/ARM_CM4F .
 
 #
 # The command for calling the linker
