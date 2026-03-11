@@ -1,0 +1,280 @@
+
+Discarded input sections
+
+ .text          0x00000000        0x0 gcc/libs/startup_tm4c123.o
+ .data          0x00000000        0x0 gcc/libs/startup_tm4c123.o
+ .bss           0x00000000        0x0 gcc/libs/startup_tm4c123.o
+ .text.SystemInit
+                0x00000000        0xe gcc/libs/startup_tm4c123.o
+ .text          0x00000000        0x0 gcc/libs/system_tm4c123.o
+ .data          0x00000000        0x0 gcc/libs/system_tm4c123.o
+ .bss           0x00000000        0x0 gcc/libs/system_tm4c123.o
+ .data.crystaltable
+                0x00000000       0x80 gcc/libs/system_tm4c123.o
+ .rodata.crystaltablesize
+                0x00000000        0x4 gcc/libs/system_tm4c123.o
+ .text.FindCrystalEncoding
+                0x00000000       0x44 gcc/libs/system_tm4c123.o
+ .text.SystemCoreClockSet
+                0x00000000      0x44c gcc/libs/system_tm4c123.o
+ .text.GetOscillatorFrequency
+                0x00000000       0x80 gcc/libs/system_tm4c123.o
+ .text.SystemCoreClockUpdate
+                0x00000000       0x18 gcc/libs/system_tm4c123.o
+ .text.SystemCoreClockGet
+                0x00000000       0xfc gcc/libs/system_tm4c123.o
+ .text          0x00000000        0x0 gcc/src/main.o
+ .data          0x00000000        0x0 gcc/src/main.o
+ .bss           0x00000000        0x0 gcc/src/main.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x00000000         0x00040000         xr
+RAM              0x20000000         0x00007000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD gcc/libs/startup_tm4c123.o
+LOAD gcc/libs/system_tm4c123.o
+LOAD gcc/src/main.o
+LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libm.a
+LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc_nano.a
+LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7e-m+fp/hard/libgcc.a
+START GROUP
+LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7e-m+fp/hard/libgcc.a
+LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libg_nano.a
+LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc_nano.a
+END GROUP
+START GROUP
+LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7e-m+fp/hard/libgcc.a
+LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc_nano.a
+END GROUP
+                0x00000000                        _text_start = .
+                0x00000000                        _text = .
+
+.text           0x00000000      0x3b0
+ *(.nvictable)
+ .nvictable     0x00000000      0x26c gcc/libs/startup_tm4c123.o
+                0x00000000                nvictable
+ *(.text*)
+ .text.Default_Handler
+                0x0000026c       0x18 gcc/libs/startup_tm4c123.o
+                0x0000026c                TIMER16_4B_IRQHandler
+                0x0000026c                TIMER64_3A_IRQHandler
+                0x0000026c                DebugMon_Handler
+                0x0000026c                I2C0_IRQHandler
+                0x0000026c                TIMER64_0A_IRQHandler
+                0x0000026c                TIMER16_1B_IRQHandler
+                0x0000026c                HardFault_Handler
+                0x0000026c                GPIOE_IRQHandler
+                0x0000026c                GPIOB_IRQHandler
+                0x0000026c                GPIOA_IRQHandler
+                0x0000026c                SysTick_Handler
+                0x0000026c                PendSV_Handler
+                0x0000026c                NMI_Handler
+                0x0000026c                TIMER64_4B_IRQHandler
+                0x0000026c                I2C1_IRQHandler
+                0x0000026c                UART1_IRQHandler
+                0x0000026c                ADC0Seq0_IRQHandler
+                0x0000026c                TIMER16_5B_IRQHandler
+                0x0000026c                UART0_IRQHandler
+                0x0000026c                SSI0_IRQHandler
+                0x0000026c                ADC0Seq1_IRQHandler
+                0x0000026c                UsageFault_Handler
+                0x0000026c                Hibernation_IRQHandler
+                0x0000026c                TIMER64_5A_IRQHandler
+                0x0000026c                PORTD_IRQHandler
+                0x0000026c                TIMER64_1A_IRQHandler
+                0x0000026c                UDMAError_IRQHandler
+                0x0000026c                SSI1_IRQHandler
+                0x0000026c                GPIOF_IRQHandler
+                0x0000026c                I2C2_IRQHandler
+                0x0000026c                LPTimer_IRQHandler
+                0x0000026c                Flash_IRQHandler
+                0x0000026c                ACOMP1_IRQHandler
+                0x0000026c                UART5_IRQHandler
+                0x0000026c                GPIOD_IRQHandler
+                0x0000026c                TIMER64_2A_IRQHandler
+                0x0000026c                ACOMP0_IRQHandler
+                0x0000026c                GPIOC_IRQHandler
+                0x0000026c                UART2_IRQHandler
+                0x0000026c                ADC1Seq0_IRQHandler
+                0x0000026c                UART4_IRQHandler
+                0x0000026c                TIMER16_3B_IRQHandler
+                0x0000026c                TIMER16_3A_IRQHandler
+                0x0000026c                TIMER64_0B_IRQHandler
+                0x0000026c                Default_Handler
+                0x0000026c                TIMER16_4A_IRQHandler
+                0x0000026c                TIMER16_0A_IRQHandler
+                0x0000026c                USB_IRQHandler
+                0x0000026c                ADC1Seq2_IRQHandler
+                0x0000026c                ADC1Seq1_IRQHandler
+                0x0000026c                TIMER64_3B_IRQHandler
+                0x0000026c                TIMER16_2A_IRQHandler
+                0x0000026c                I2C3_IRQHandler
+                0x0000026c                MemManage_Handler
+                0x0000026c                WDT_IRQHandler
+                0x0000026c                SysCtl_IRQHandler
+                0x0000026c                SVC_Handler
+                0x0000026c                TIMER16_1A_IRQHandler
+                0x0000026c                ADC1Seq3_IRQHandler
+                0x0000026c                System_IRQHandler
+                0x0000026c                TIMER64_1B_IRQHandler
+                0x0000026c                CAN0_IRQHandler
+                0x0000026c                TIMER16_2B_IRQHandler
+                0x0000026c                ADC0Seq2_IRQHandler
+                0x0000026c                PORTA_IRQHandler
+                0x0000026c                ADC0Seq3_IRQHandler
+                0x0000026c                TIMER16_5A_IRQHandler
+                0x0000026c                UART7_IRQHandler
+                0x0000026c                UART6_IRQHandler
+                0x0000026c                TIMER64_4A_IRQHandler
+                0x0000026c                BusFault_Handler
+                0x0000026c                UART3_IRQHandler
+                0x0000026c                UDMASoft_IRQHandler
+                0x0000026c                TIMER16_0B_IRQHandler
+                0x0000026c                TIMER64_5B_IRQHandler
+                0x0000026c                TIMER64_2B_IRQHandler
+ .text._main    0x00000284        0xe gcc/libs/startup_tm4c123.o
+                0x00000284                _main
+ .text._stop    0x00000292        0x6 gcc/libs/startup_tm4c123.o
+                0x00000292                _stop
+ .text.Reset_Handler
+                0x00000298       0x68 gcc/libs/startup_tm4c123.o
+                0x00000298                Reset_Handler
+ .text.SystemInit
+                0x00000300       0x1c gcc/libs/system_tm4c123.o
+                0x00000300                SystemInit
+ .text.delay    0x0000031c       0x22 gcc/src/main.o
+ *fill*         0x0000033e        0x2 
+ .text.main     0x00000340       0x70 gcc/src/main.o
+                0x00000340                main
+                0x000003b0                        . = ALIGN (0x4)
+ *(.rodata*)
+
+.glue_7         0x000003b0        0x0
+ .glue_7        0x000003b0        0x0 linker stubs
+
+.glue_7t        0x000003b0        0x0
+ .glue_7t       0x000003b0        0x0 linker stubs
+
+.vfp11_veneer   0x000003b0        0x0
+ .vfp11_veneer  0x000003b0        0x0 linker stubs
+
+.v4_bx          0x000003b0        0x0
+ .v4_bx         0x000003b0        0x0 linker stubs
+
+.iplt           0x000003b0        0x0
+ .iplt          0x000003b0        0x0 gcc/libs/startup_tm4c123.o
+
+.rel.dyn        0x000003b0        0x0
+ .rel.iplt      0x000003b0        0x0 gcc/libs/startup_tm4c123.o
+
+.ARM.extab
+ *(.ARM.extab* .gnu.linkonce.armextab.*)
+                0x000003b0                        _exidx_start = .
+
+.ARM.exidx
+ *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+                0x000003b0                        _exidx_end = .
+                0x000003b0                        _text_end = .
+                0x000003b0                        _etext = .
+
+.data           0x20000000        0x4 load address 0x000003b0
+                0x20000000                        . = ALIGN (0x4)
+                0x20000000                        _data_start = .
+ *(.data*)
+ .data.SystemCoreClock
+                0x20000000        0x4 gcc/libs/system_tm4c123.o
+                0x20000000                SystemCoreClock
+ *(vtable*)
+                0x20000004                        _data_end = .
+
+.igot.plt       0x20000004        0x0 load address 0x000003b4
+ .igot.plt      0x20000004        0x0 gcc/libs/startup_tm4c123.o
+
+.bss            0x20000004        0x4 load address 0x000003b4
+                0x20000004                        . = ALIGN (0x4)
+                0x20000004                        _bss_start = .
+ *(.bss*)
+ .bss.intmask   0x20000004        0x4 gcc/libs/startup_tm4c123.o
+                0x20000008                        . = ALIGN (0x4)
+ *(COMMON*)
+                0x20000008                        . = ALIGN (0x4)
+                0x20000008                        _bss_end = .
+                0x20000008                        Heap_Mem = .
+
+.heap           0x20000008        0x0
+                0x20000008                        _end = .
+ *(.heap*)
+                0x20000008                        _HeapLimit = .
+
+.stack_dummy    0x20000008        0x0
+                0x20000008                        . = ALIGN (0x4)
+ *(.stack*)
+                0x20007000                        _StackTop = (ORIGIN (RAM) + LENGTH (RAM))
+                0x20007000                        _StackLimit = (_StackTop - SIZEOF (.stack_dummy))
+                [!provide]                        PROVIDE (_stack = _StackTop)
+                0x00000001                        ASSERT ((_StackLimit >= _HeapLimit), region RAM overflowed with stack)
+OUTPUT(gcc/main.axf elf32-littlearm)
+LOAD linker stubs
+
+.debug_info     0x00000000     0x1dca
+ .debug_info    0x00000000      0x31b gcc/libs/startup_tm4c123.o
+ .debug_info    0x0000031b      0xdbd gcc/libs/system_tm4c123.o
+ .debug_info    0x000010d8      0xcf2 gcc/src/main.o
+
+.debug_abbrev   0x00000000      0x4c2
+ .debug_abbrev  0x00000000      0x145 gcc/libs/startup_tm4c123.o
+ .debug_abbrev  0x00000145      0x233 gcc/libs/system_tm4c123.o
+ .debug_abbrev  0x00000378      0x14a gcc/src/main.o
+
+.debug_aranges  0x00000000       0xb0
+ .debug_aranges
+                0x00000000       0x40 gcc/libs/startup_tm4c123.o
+ .debug_aranges
+                0x00000040       0x48 gcc/libs/system_tm4c123.o
+ .debug_aranges
+                0x00000088       0x28 gcc/src/main.o
+
+.debug_rnglists
+                0x00000000       0x78
+ .debug_rnglists
+                0x00000000       0x2b gcc/libs/startup_tm4c123.o
+ .debug_rnglists
+                0x0000002b       0x34 gcc/libs/system_tm4c123.o
+ .debug_rnglists
+                0x0000005f       0x19 gcc/src/main.o
+
+.debug_line     0x00000000      0x6ae
+ .debug_line    0x00000000      0x129 gcc/libs/startup_tm4c123.o
+ .debug_line    0x00000129      0x4b1 gcc/libs/system_tm4c123.o
+ .debug_line    0x000005da       0xd4 gcc/src/main.o
+
+.debug_str      0x00000000      0x93a
+ .debug_str     0x00000000      0x93a gcc/libs/startup_tm4c123.o
+                                0x27b (size before relaxing)
+ .debug_str     0x0000093a      0x83e gcc/libs/system_tm4c123.o
+ .debug_str     0x0000093a      0x775 gcc/src/main.o
+
+.comment        0x00000000       0x26
+ .comment       0x00000000       0x26 gcc/libs/startup_tm4c123.o
+                                 0x27 (size before relaxing)
+ .comment       0x00000026       0x27 gcc/libs/system_tm4c123.o
+ .comment       0x00000026       0x27 gcc/src/main.o
+
+.ARM.attributes
+                0x00000000       0x34
+ .ARM.attributes
+                0x00000000       0x34 gcc/libs/startup_tm4c123.o
+ .ARM.attributes
+                0x00000034       0x34 gcc/libs/system_tm4c123.o
+ .ARM.attributes
+                0x00000068       0x34 gcc/src/main.o
+
+.debug_frame    0x00000000      0x1cc
+ .debug_frame   0x00000000       0x90 gcc/libs/startup_tm4c123.o
+ .debug_frame   0x00000090       0xe8 gcc/libs/system_tm4c123.o
+ .debug_frame   0x00000178       0x54 gcc/src/main.o
