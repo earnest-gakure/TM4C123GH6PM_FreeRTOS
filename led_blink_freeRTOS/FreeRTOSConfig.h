@@ -16,25 +16,31 @@
 #define configUSE_16_BIT_TICKS                  0
 #define configIDLE_SHOULD_YIELD                 1
 
-/* Disable all hooks for now */
+/* Hooks */
 #define configUSE_IDLE_HOOK                     0
 #define configUSE_TICK_HOOK                     0
 #define configUSE_MALLOC_FAILED_HOOK            0
 #define configCHECK_FOR_STACK_OVERFLOW          0
 
-/* Disable timers — removes timer task from startup */
+/* Timers */
 #define configUSE_TIMERS                        0
 #define configUSE_MUTEXES                       0
 #define configUSE_SEMAPHORES                    0
 
-/* Cortex-M4 interrupt priorities */
-#define configKERNEL_INTERRUPT_PRIORITY         ( 7 << (8 - configPRIO_BITS) )
-#define configMAX_SYSCALL_INTERRUPT_PRIORITY    ( 5 << (8 - configPRIO_BITS) )
+/* Cortex-M4 interrupt priorities (3 priority bits → values must be multiples of 0x20) */
+#define configKERNEL_INTERRUPT_PRIORITY         255   /* 0xFF — lowest */
+#define configMAX_SYSCALL_INTERRUPT_PRIORITY    160   /* 0xA0 — level 5 */
 
 /* API includes */
 #define INCLUDE_vTaskDelay                      1
 #define INCLUDE_vTaskDelete                     1
 #define INCLUDE_vTaskSuspend                    1
 #define INCLUDE_xTaskGetSchedulerState          1
+
+/* *** THE KEY FIX ***
+   Map FreeRTOS handler names to the CMSIS names already in the vector table */
+#define vPortSVCHandler     SVC_Handler
+#define xPortPendSVHandler  PendSV_Handler
+#define xPortSysTickHandler SysTick_Handler
 
 #endif /* FREERTOS_CONFIG_H */
