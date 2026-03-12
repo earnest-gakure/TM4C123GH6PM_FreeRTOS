@@ -1,23 +1,27 @@
 #include "TM4C123GH6PM.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
-static void delay(volatile unsigned long n){
-    while(n--){}
-}
+void led_task(void *pvParameters)
+{
+    SYSCTL->RCGCGPIO |= (1<<5);        // enable clock for GPIOF
+    while((SYSCTL->PRGPIO & (1<<5))==0);
 
-int main(){
-    /*enable clock for GPIOF */
-    SYSCTL->RCGCGPIO |= (1U<<5);
-    
-    GPIOF->DIR |= (1<<1);
-    GPIOF->DEN |= (1<<1);
+    GPIOF->DIR |= (1<<1);              // PF1 output
+    GPIOF->DEN |= (1<<1);              // digital enable
 
-    while(1){
-        GPIOF->DATA |= (1<<1);
-        delay(400000);
-        GPIOF->DATA &= ~(1<<1);
-        delay(400000);
+    while(1)
+    {
+        GPIOF->DATA ^= (1<<1);         // toggle LED
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
 
+int main(void)
+{
+    xTaskCreate(led_task,"LED",200,NULL,1,NULL);
 
+    vTaskStartScheduler();
 
+    while(1);
+}
