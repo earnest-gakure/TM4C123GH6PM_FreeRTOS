@@ -1,0 +1,18 @@
+# Build artifacts
+*.o
+*.d
+*.axf
+*.bin
+*.map
+*.elf
+
+# GCC build folders
+gcc/
+
+# Debug files
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
