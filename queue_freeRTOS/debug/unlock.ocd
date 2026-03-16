@@ -1,0 +1,8 @@
+interface icdi
+transport select swd
+adapter speed 1000
+init
+reset halt
+flash erase_address 0x00000000 0x40000
+reset run
+exit
