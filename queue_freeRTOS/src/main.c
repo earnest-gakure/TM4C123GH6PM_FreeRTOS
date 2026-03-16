@@ -2,6 +2,38 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include <time.h>
+#include "queue.h"
+#include "stdio.h"
+
+QueueHandle_t myQueue;
+
+//task function to send data to the queue
+void myTask1(void *p){
+    char myTxBuff[30];
+    //create queue
+    myQueue = xQueueCreate(5,sizeof(myTxBuff));
+    sprintf(myTxBuff, "message 1");
+    xQueueSend(myQueue,myTxBuff, (TickType_t)0);
+
+    while(1){
+
+    }
+
+}
+
+//task function to read data from the queue
+void myTask2(void *p){
+    char myRxBuff[30];
+    while(1){
+        if(myQueue != 0){
+            if( xQueueReceive(myQueue, (void*)myRxBuff, (TickType_t)5)){
+                printf("Data received : %s\r\n", myRxBuff);
+            }
+        }
+    }
+
+}
+
 
 void gpio_init(){
     SYSCTL->RCGCGPIO |= (1<<5);
@@ -13,50 +45,12 @@ void gpio_init(){
 
 }
 
-void red_led_task(void *pvParameters)
-{
-    // Enable clock for GPIOF
-    gpio_init();
-    vTaskDelay(pdMS_TO_TICKS(200));
-    while (1)
-    {
-        GPIOF->DATA |= (1 << 1);
-        vTaskDelay(pdMS_TO_TICKS(300));
-        GPIOF->DATA &= ~(1<<1);
-        vTaskDelay(pdMS_TO_TICKS(300));
-
-    }
-}
-void green_led_task(void *pvParameters){
-   gpio_init();
-   //vTaskDelay(pdMS_TO_TICKS(200));
-
-    while(1){
-        GPIOF->DATA |= (1<<3);
-        vTaskDelay(pdMS_TO_TICKS(600));
-        GPIOF->DATA &= ~(1<<3);
-        vTaskDelay(pdMS_TO_TICKS(600));
-    }
-}
-void blue_led_task(void *pvParameters){
-   gpio_init();
-   vTaskDelay(pdMS_TO_TICKS(200));
-   
-    while(1){
-        GPIOF->DATA |= (1<<2);
-        vTaskDelay(pdMS_TO_TICKS(900));
-        GPIOF->DATA &= ~(1<<2);
-        vTaskDelay(pdMS_TO_TICKS(900));
-    }
-}
-
-
 int main(void)
 {
-    xTaskCreate(red_led_task,  "RED  LED", 256, NULL, 1, NULL);
-    xTaskCreate(blue_led_task,"BLUE LED",256, NULL, 1 ,NULL );
-    xTaskCreate(green_led_task,"GREEN LED",256, NULL, 1 ,NULL );
+    xTaskCreate(myTask1,  "task 1", 256, NULL, 1, NULL);
+    xTaskCreate(myTask2,  "task 2", 256, NULL, 1 ,NULL );
     
     vTaskStartScheduler();
     while (1);
 }
+
