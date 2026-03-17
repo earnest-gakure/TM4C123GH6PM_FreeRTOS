@@ -75,13 +75,13 @@ void led_blink(void *pvparameter){
 void GPIOF_IRQHandler(void){
       uint8_t isr_status = 0;
       BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-      if(GPIOF->RIS & B1){
+      if(GPIOF->MIS & B1){ // GPIOF->RIS & B1
              isr_status = 1;
              //clear interrupt
              GPIOF->ICR = B1 ;
              xQueueSendFromISR(my_queue, &isr_status, &xHigherPriorityTaskWoken);
         }   
-      if(GPIOF->RIS & B2){
+      if(GPIOF->MIS & B2 ){// GPIOF->RIS & B2
              isr_status = 2;
              //clear isr
              GPIOF->ICR = B2;
