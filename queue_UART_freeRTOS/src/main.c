@@ -47,51 +47,6 @@ void gpio_init(){
 
 }
 
-
-//function to read queue value and turn ON/OFF led 
-void led_blink(void *pvparameter){
-    uint8_t isr_status = 0;
-    /* Default: green on */
-    GPIOF->DATA &= ~(RED|BLUE|GREEN);
-    GPIOF->DATA |= GREEN;
-    while(1){
-    
-        if(xQueueReceive(my_queue, &isr_status, (TickType_t)2000)){
-            if(isr_status == 1){
-                GPIOF->DATA &= ~(RED|BLUE|GREEN);
-                GPIOF->DATA |= RED; ;
-            }
-            else if(isr_status == 2){
-                GPIOF->DATA &= ~(RED|BLUE|GREEN);
-                GPIOF->DATA |= BLUE;
-            }
-        }else{
-                GPIOF->DATA = GREEN;
-         }
-    }
-
-}
-
-void GPIOF_IRQHandler(void){
-      uint8_t isr_status = 0;
-      BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-      if(GPIOF->MIS & B1){ // GPIOF->RIS & B1
-             isr_status = 1;
-             //clear interrupt
-             GPIOF->ICR = B1 ;
-             xQueueSendFromISR(my_queue, &isr_status, &xHigherPriorityTaskWoken);
-        }   
-      if(GPIOF->MIS & B2 ){// GPIOF->RIS & B2
-             isr_status = 2;
-             //clear isr
-             GPIOF->ICR = B2;
-             xQueueSendFromISR(my_queue, &isr_status, &xHigherPriorityTaskWoken);
-        }
-     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-      
-
-}
-
 int main(void)
 {
     //initialize gpio pins
