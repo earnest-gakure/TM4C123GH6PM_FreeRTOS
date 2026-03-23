@@ -58,6 +58,7 @@ void uart0_init(void)
     // Enable UART0 and GPIOA clocks
     SYSCTL->RCGCUART |= (1 << 0);   // UART0
     SYSCTL->RCGCGPIO |= (1 << 0);   // GPIOA
+    for(volatile int i = 0; i < 100; i++);
     
     UART0->CTL  = 0;           // disable UART before config
     UART0->IBRD = 104;         // 9600 baud @ 16MHz
@@ -132,7 +133,7 @@ void UART5_IRQHandler(){
 }
 
 //function to send string and enable TX
-static void uart_send_string(const char *str){
+static void uart5_send_string(const char *str){
     //enqueue the data
     while (*str)
     {
@@ -140,8 +141,7 @@ static void uart_send_string(const char *str){
         xQueueSend(xTxQueue, (void*)str, portMAX_DELAY);
         str++;
     }
-    // //enable TX interrupt
-    // UART5->IM |= (1 << 5);
+   
     
     /* manually write first char to kick TX transition */
     char c;
@@ -156,68 +156,122 @@ static void uart_send_string(const char *str){
 /*waits for sim800l response*/
 /*reads XRxQueue until expected string is found or timeout*/
 
-static BaseType_t sim800l_wait_response(char *responseBuffer, uint8_t bufsize, char *expectedrespBuf, uint32_t timeoutMs){
+static BaseType_t sim800l_wait_response(char *buf,
+                                         uint8_t bufsize,
+                                         const char *expected,
+                                         uint32_t timeoutMs)
+{
     uint8_t index = 0;
-    char data = 0;
-    TickType_t timeout = pdMS_TO_TICKS(timeoutMs) ; // convert ms to tick time
-    memset(responseBuffer, 0, bufsize);
+    char data = '\0';
+    TickType_t timeout = pdMS_TO_TICKS(timeoutMs);
 
-    while (index < (bufsize - 1))
+    memset(buf, 0, bufsize);
+
+    while(index < bufsize - 1)
     {
-        if (xQueueReceive(xRxQueue, &data, timeout) == pdTRUE)
+        if(xQueueReceive(xRxQueue, &data, timeout) == pdTRUE)
         {
-            responseBuffer[index++] = data;
-            responseBuffer[index]   = '\0';
-            if (strstr(responseBuffer, expectedrespBuf) != NULL)
+            buf[index++] = data;
+            buf[index]   = '\0';
+
+            // show raw bytes arriving on terminal for debugging
+            uart0_print("RX: ");
+            uart0_print(buf);
+            uart0_print("\r\n");
+
+            if(strstr(buf, expected) != NULL)
             {
-                return pdTRUE;       // found expected response
+                return pdTRUE;
             }
-            
         }
-        else{
-            return pdFALSE;         // timout
+        else
+        {
+            uart0_print("TIMEOUT\r\n");
+            return pdFALSE;
         }
-        
     }
     return pdFALSE;
-    
 }
-
-void sim800l_task(void *pvParameters){
-
+/*SIM800l task*/
+void sim800l_task(void *pvParameters)
+{
     char response[128];
+
+    uart0_print("Task started\r\n");
+
     vTaskDelay(pdMS_TO_TICKS(4000));
-    //send AT commands and wait for response for each of the AT command
 
-    while(1){
-        uart_send_string("AT\r\n");
-        if (sim800l_wait_response(response, sizeof(response), "OK", 2000) == pdTRUE)
+    uart0_print("SIM800L boot delay done\r\n");
+
+    while(1)
+    {
+        /* ── AT handshake ───────────────────────────────────────── */
+        uart0_print("Sending AT...\r\n");
+        uart5_send_string("AT\r\n");
+
+        if(sim800l_wait_response(response, sizeof(response), "OK", 4000)
+                == pdTRUE)
         {
-            uart0_print("AT OK\r\n");
-        }else
+            uart0_print(">> AT OK\r\n");
+        }
+        else
         {
-            uart0_print("No response\r\n");
-            vTaskDelay(pdMS_TO_TICKS(3000));
+            uart0_print(">> AT failed - retrying\r\n");
+            vTaskDelay(pdMS_TO_TICKS(2000));
             continue;
-            
         }
 
-        uart_send_string("AT+CPIN?\r\n");
-        if (sim800l_wait_response(response, sizeof(response), "OK", 2000) == pdTRUE)
+        /* ── SIM card ───────────────────────────────────────────── */
+        uart0_print("Checking SIM...\r\n");
+        uart5_send_string("AT+CPIN?\r\n");
+
+        if(sim800l_wait_response(response, sizeof(response), "READY", 2000)
+                == pdTRUE)
         {
-            uart0_print("SIM Ready\r\n");
-        }else
+            uart0_print(">> SIM Ready\r\n");
+        }
+        else
         {
-            uart0_print("SIM Not Ready\r\n");
+            uart0_print(">> SIM Not Ready\r\n");
         }
 
-        vTaskDelay(pdMS_TO_TICKS(15000));
+        /* ── Signal strength ────────────────────────────────────── */
+        uart0_print("Checking signal...\r\n");
+        uart5_send_string("AT+CSQ\r\n");
+
+        if(sim800l_wait_response(response, sizeof(response), "OK", 2000)
+                == pdTRUE)
+        {
+            uart0_print(">> Signal: ");
+            uart0_print(response);
+            uart0_print("\r\n");
+        }
+        else
+        {
+            uart0_print(">> Signal check failed\r\n");
+        }
+
+        /* ── Network registration ───────────────────────────────── */
+        uart0_print("Checking network...\r\n");
+        uart5_send_string("AT+CREG?\r\n");
+
+        if(sim800l_wait_response(response, sizeof(response), "OK", 2000)
+                == pdTRUE)
+        {
+            uart0_print(">> Network: ");
+            uart0_print(response);
+            uart0_print("\r\n");
+        }
+        else
+        {
+            uart0_print(">> Network check failed\r\n");
+        }
+        /*get sim CCCID*/
+
+        uart0_print("---- cycle done ----\r\n");
+        vTaskDelay(pdMS_TO_TICKS(10000));
     }
-
-
-
 }
-
 
 
 /* ------------------------------------------------------------------ */
@@ -232,10 +286,18 @@ int main(void)
     xTxQueue = xQueueCreate(64, sizeof(char));
     xRxQueue = xQueueCreate(64, sizeof(char));
 
-    
+    // ── BARE BLOCKING TEST — no FreeRTOS involved ──
+    // manually send a string before scheduler starts
+    const char *test = "BOOT OK\r\n";
+    while(*test)
+    {
+        while(UART5->FR & (1 << 5));  // wait if TX FIFO full
+        UART5->DR = *test++;
+    }
+    // if you see "BOOT OK" on terminal → UART5 hardware works
+    // if you see nothing → wiring or baud rate problem
 
-    xTaskCreate(sim800l_task, "sim800l", 512 , NULL, 3, NULL);
-
+    xTaskCreate(sim800l_task, "sim800l", 512, NULL, 3, NULL);
     vTaskStartScheduler();
 
     while(1);
