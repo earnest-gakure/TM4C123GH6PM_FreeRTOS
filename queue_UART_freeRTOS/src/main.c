@@ -86,7 +86,8 @@ void uart0_print(const char *str)
 {
     while(*str)
     {
-        uart0_send_char(*str++);
+            uart0_send_char(*str);
+        str++;
     }
 }
 //uart5 isr handler
@@ -175,11 +176,11 @@ static BaseType_t sim800l_wait_response(char *buf,
             buf[index]   = '\0';
 
             // show raw bytes arriving on terminal for debugging
-            uart0_print("RX: ");
-            uart0_print(buf);
-            uart0_print("\r\n");
+            // uart0_print("RX: ");
+            // uart0_print(buf);
+            // uart0_print("\r\n");
 
-            if(strstr(buf, expected) != NULL)
+            if(strstr(buf, expected) && strstr(buf, "\r\n"))
             {
                 return pdTRUE;
             }
@@ -191,6 +192,13 @@ static BaseType_t sim800l_wait_response(char *buf,
         }
     }
     return pdFALSE;
+}
+
+/*helper function to read dummy response from the queue*/
+void flush_rx_queue(void)
+{
+    char dummy;
+    while(xQueueReceive(xRxQueue, &dummy, 0) == pdTRUE);
 }
 /*SIM800l task*/
 void sim800l_task(void *pvParameters)
@@ -207,6 +215,7 @@ void sim800l_task(void *pvParameters)
     {
         /* ── AT handshake ───────────────────────────────────────── */
         uart0_print("Sending AT...\r\n");
+        flush_rx_queue();
         uart5_send_string("AT\r\n");
 
         if(sim800l_wait_response(response, sizeof(response), "OK", 4000)
@@ -223,6 +232,7 @@ void sim800l_task(void *pvParameters)
 
         /* ── SIM card ───────────────────────────────────────────── */
         uart0_print("Checking SIM...\r\n");
+        flush_rx_queue();
         uart5_send_string("AT+CPIN?\r\n");
 
         if(sim800l_wait_response(response, sizeof(response), "READY", 2000)
@@ -237,6 +247,7 @@ void sim800l_task(void *pvParameters)
 
         /* ── Signal strength ────────────────────────────────────── */
         uart0_print("Checking signal...\r\n");
+        flush_rx_queue();
         uart5_send_string("AT+CSQ\r\n");
 
         if(sim800l_wait_response(response, sizeof(response), "OK", 2000)
@@ -253,6 +264,7 @@ void sim800l_task(void *pvParameters)
 
         /* ── Network registration ───────────────────────────────── */
         uart0_print("Checking network...\r\n");
+        flush_rx_queue();
         uart5_send_string("AT+CREG?\r\n");
 
         if(sim800l_wait_response(response, sizeof(response), "OK", 2000)
@@ -267,6 +279,37 @@ void sim800l_task(void *pvParameters)
             uart0_print(">> Network check failed\r\n");
         }
         /*get sim CCCID*/
+        uart0_print("checking CCID\r\n");
+        flush_rx_queue();
+        uart5_send_string("AT+CCID\r\n");
+
+        if(sim800l_wait_response(response, sizeof(response), "OK", 2000) == pdTRUE)
+        {
+            uart0_print(">> IMEI: ");
+            uart0_print(response);
+            uart0_print("\r\n");
+        }
+        else
+        {
+            uart0_print(">> IMEI get failed\r\n");
+        }
+
+        /* check operator*/
+        uart0_print("checking operator\r\n");
+        flush_rx_queue();
+        uart5_send_string("AT+COPS?\r\n");
+
+        if(sim800l_wait_response(response, sizeof(response), "OK", 2000) == pdTRUE)
+        {
+            uart0_print(">> operator: ");
+            uart0_print(response);
+            uart0_print("\r\n");
+        }
+        else
+        {
+            uart0_print(">> operator get failed\r\n");
+        }
+        
 
         uart0_print("---- cycle done ----\r\n");
         vTaskDelay(pdMS_TO_TICKS(10000));
