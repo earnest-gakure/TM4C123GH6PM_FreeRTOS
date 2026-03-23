@@ -3,6 +3,7 @@
 #include "task.h"
 #include "queue.h"
 #include <stdint.h>
+#include <string.h>
 
 QueueHandle_t xTxQueue;
 QueueHandle_t xRxQueue;
@@ -42,136 +43,182 @@ void uart5_init(void)
     GPIOE->AMSEL = 0;
     GPIOE->PCTL  = 0x00110000;
 
+    //enable interrupts
     UART5->ICR = 0xFFF;        /* clear all pending interrupts        */
     UART5->IM  = 0x50;         /* enable RX + receive-timeout (bits 4,6) */
 
     NVIC_SetPriority(UART5_IRQn, 6);
     NVIC_EnableIRQ(UART5_IRQn);
-}
 
-/* ------------------------------------------------------------------ */
-/*  UART5 ISR — handles both TX and RX                                  */
-/* ------------------------------------------------------------------ */
-void UART5_IRQHandler(void)
+
+}
+/*use uart0 to print on the terminal*/
+void uart0_init(void)
 {
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    uint32_t status = UART5->MIS;
+    // Enable UART0 and GPIOA clocks
+    SYSCTL->RCGCUART |= (1 << 0);   // UART0
+    SYSCTL->RCGCGPIO |= (1 << 0);   // GPIOA
+    
+    UART0->CTL  = 0;           // disable UART before config
+    UART0->IBRD = 104;         // 9600 baud @ 16MHz
+    UART0->FBRD = 11;
+    UART0->CC   = 0;
+    UART0->LCRH = 0x60;        // 8 bits, no parity, 1 stop
+    UART0->CTL  = 0x301;       // enable TX + RX + UART
 
-    /* --- RX / receive-timeout --- */
-    if (status & 0x50)
-    {
-        while(!(UART5->FR & (1 << 4)))   /* while RX FIFO not empty */
-        {
-            char c = (char)(UART5->DR & 0xFF);
-            xQueueSendFromISR(xRxQueue, &c, &xHigherPriorityTaskWoken);
-        }
-        UART5->ICR = 0x50;
-    }
-
-    /* --- TX --- */
-    if (status & 0x20)
-    {
-        char c;
-        while(!(UART5->FR & (1 << 5)))   /* while TX FIFO not full */
-        {
-            if (xQueueReceiveFromISR(xTxQueue, &c, &xHigherPriorityTaskWoken) == pdTRUE)
-            {
-                UART5->DR = c;
-            }
-            else
-            {
-                UART5->IM &= ~(1 << 5);  /* queue empty — disable TX interrupt */
-                break;
-            }
-        }
-        UART5->ICR = 0x20;
-    }
-
-    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    // Configure PA0, PA1 as UART
+    GPIOA->DEN   |= 0x03;      // PA0, PA1 digital enable
+    GPIOA->AFSEL |= 0x03;      // alternate function
+    GPIOA->AMSEL &= ~0x03;     // disable analog
+    GPIOA->PCTL  = (GPIOA->PCTL & 0xFFFFFF00) | 0x00000011; // U0RX, U0TX
+}
+/*functions to print debug strings*/
+// print a single char
+void uart0_send_char(char c)
+{
+    while(UART0->FR & (1 << 5));  // wait if TX FIFO full
+    UART0->DR = c;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Send string — push first char directly to kick TX, ISR handles rest */
-/* ------------------------------------------------------------------ */
-static void uart_send_string(const char *str)
+// print a string
+void uart0_print(const char *str)
 {
     while(*str)
     {
+        uart0_send_char(*str++);
+    }
+}
+//uart5 isr handler
+void UART5_IRQHandler(){
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE ; 
+
+    //save interrupt
+    uint32_t status = UART5->MIS ;
+    //check if rx fifo or receive timeout
+    if (status & 0x50)
+    {
+        //read data and enqueue it
+        while (!(UART5->FR & (1 << 4))) //wait until RX FIFO not empty
+        {
+            //enqueue the data
+            char c = (char)(UART5->DR & 0xFF);
+            xQueueSendFromISR(xRxQueue, &c, &xHigherPriorityTaskWoken);
+
+        }
+        UART5->ICR = 0x50 ; //clear interrupt
+    }
+    //if TX interrupt is fired
+    if(status & 0x20){
+        char c;
+        while (!(UART5->FR & (1 << 5)))
+        {
+            //
+            if (xQueueReceiveFromISR(xTxQueue, &c, &xHigherPriorityTaskWoken) == pdTRUE)
+            {
+                UART5->DR = c;
+            }else
+            {
+                /*disable TX interrupt */
+                UART5->IM &= ~(1 << 5);
+                break;
+            }   
+            
+        }
+        UART5->ICR = 0x20 ;
+              
+    }
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    
+}
+
+//function to send string and enable TX
+static void uart_send_string(const char *str){
+    //enqueue the data
+    while (*str)
+    {
+        //enqueue
         xQueueSend(xTxQueue, (void*)str, portMAX_DELAY);
         str++;
     }
-
+    // //enable TX interrupt
+    // UART5->IM |= (1 << 5);
+    
     /* manually write first char to kick TX transition */
     char c;
     if (xQueueReceive(xTxQueue, &c, 0) == pdTRUE)
     {
-        while(UART5->FR & (1 << 5));
+        //while(UART5->FR & (1 << 5));
         UART5->DR = c;
         UART5->IM |= (1 << 5);   /* enable TX interrupt for remaining chars */
     }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Sender task — transmits "Ping N" every second                       */
-/* ------------------------------------------------------------------ */
-void sender_task(void *pvParameters)
-{
-    int  count = 0;
-    char msg[32];
+/*waits for sim800l response*/
+/*reads XRxQueue until expected string is found or timeout*/
 
-    while(1)
+static BaseType_t sim800l_wait_response(char *responseBuffer, uint8_t bufsize, char *expectedrespBuf, uint32_t timeoutMs){
+    uint8_t index = 0;
+    char data = 0;
+    TickType_t timeout = pdMS_TO_TICKS(timeoutMs) ; // convert ms to tick time
+    memset(responseBuffer, 0, bufsize);
+
+    while (index < (bufsize - 1))
     {
-        msg[0]='P'; msg[1]='i'; msg[2]='n'; msg[3]='g';
-        msg[4]=' '; msg[5]='0'+(count % 10);
-        msg[6]='\r'; msg[7]='\n'; msg[8]='\0';
-
-        uart_send_string(msg);
-        count++;
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-}
-
-/* ------------------------------------------------------------------ */
-/*  Receiver task — reads from RX queue, echoes back with prefix       */
-/* ------------------------------------------------------------------ */
-void receiver_task(void *pvParameters)
-{
-    char c;
-    char line[64];
-    int  idx = 0;
-
-    while(1)
-    {
-        if (xQueueReceive(xRxQueue, &c, portMAX_DELAY) == pdTRUE)
+        if (xQueueReceive(xRxQueue, &data, timeout) == pdTRUE)
         {
-            if (c == '\r' || c == '\n')
+            responseBuffer[index++] = data;
+            responseBuffer[index]   = '\0';
+            if (strstr(responseBuffer, expectedrespBuf) != NULL)
             {
-                line[idx] = '\0';
-                idx = 0;
-
-                /* direct blocking send — no queue, no conflict */
-                uart5_send_char('\r');
-                uart5_send_char('\n');
-                const char *prefix = "Received: ";
-                while(*prefix) uart5_send_char(*prefix++);
-                const char *p = line;
-                while(*p) uart5_send_char(*p++);
-                uart5_send_char('\r');
-                uart5_send_char('\n');
+                return pdTRUE;       // found expected response
             }
-            else if (idx < (int)sizeof(line) - 1)
-            {
-                line[idx++] = c;
-            }
+            
         }
+        else{
+            return pdFALSE;         // timout
+        }
+        
     }
+    return pdFALSE;
+    
 }
 
-void uart5_send_char(char c)
-{
-    while(UART5->FR & 0x20);   /* wait while TX FIFO full */
-    UART5->DR = c;
+void sim800l_task(void *pvParameters){
+
+    char response[128];
+    vTaskDelay(pdMS_TO_TICKS(4000));
+    //send AT commands and wait for response for each of the AT command
+
+    while(1){
+        uart_send_string("AT\r\n");
+        if (sim800l_wait_response(response, sizeof(response), "OK", 2000) == pdTRUE)
+        {
+            uart0_print("AT OK\r\n");
+        }else
+        {
+            uart0_print("No response\r\n");
+            vTaskDelay(pdMS_TO_TICKS(3000));
+            continue;
+            
+        }
+
+        uart_send_string("AT+CPIN?\r\n");
+        if (sim800l_wait_response(response, sizeof(response), "OK", 2000) == pdTRUE)
+        {
+            uart0_print("SIM Ready\r\n");
+        }else
+        {
+            uart0_print("SIM Not Ready\r\n");
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(15000));
+    }
+
+
+
 }
+
+
 
 /* ------------------------------------------------------------------ */
 /*  main                                                                */
@@ -179,13 +226,15 @@ void uart5_send_char(char c)
 int main(void)
 {
     gpio_init();
+    uart0_init();
     uart5_init();
 
     xTxQueue = xQueueCreate(64, sizeof(char));
     xRxQueue = xQueueCreate(64, sizeof(char));
 
-    xTaskCreate(sender_task,   "TX", 256, NULL, 2, NULL);
-    xTaskCreate(receiver_task, "RX", 256, NULL, 1, NULL);
+    
+
+    xTaskCreate(sim800l_task, "sim800l", 512 , NULL, 3, NULL);
 
     vTaskStartScheduler();
 
