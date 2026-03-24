@@ -278,7 +278,7 @@ void sim800l_task(void *pvParameters)
         {
             uart0_print(">> Network check failed\r\n");
         }
-        /*get sim CCCID*/
+        /*get sim CCID*/
         uart0_print("checking CCID\r\n");
         flush_rx_queue();
         uart5_send_string("AT+CCID\r\n");
@@ -329,16 +329,6 @@ int main(void)
     xTxQueue = xQueueCreate(64, sizeof(char));
     xRxQueue = xQueueCreate(64, sizeof(char));
 
-    // ── BARE BLOCKING TEST — no FreeRTOS involved ──
-    // manually send a string before scheduler starts
-    const char *test = "BOOT OK\r\n";
-    while(*test)
-    {
-        while(UART5->FR & (1 << 5));  // wait if TX FIFO full
-        UART5->DR = *test++;
-    }
-    // if you see "BOOT OK" on terminal → UART5 hardware works
-    // if you see nothing → wiring or baud rate problem
 
     xTaskCreate(sim800l_task, "sim800l", 512, NULL, 3, NULL);
     vTaskStartScheduler();
