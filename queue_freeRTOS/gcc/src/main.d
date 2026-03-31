@@ -6,7 +6,8 @@ gcc/src/main.o: src/main.c CMSIS/TM4C123GH6PM.h CMSIS/core_cm4.h \
  FreeRTOS/Source/include/deprecated_definitions.h \
  FreeRTOS/Source/portable/GCC/ARM_CM4F/portmacro.h \
  FreeRTOS/Source/include/mpu_wrappers.h FreeRTOS/Source/include/task.h \
- FreeRTOS/Source/include/list.h
+ FreeRTOS/Source/include/list.h FreeRTOS/Source/include/queue.h \
+ FreeRTOS/Source/include/task.h
 CMSIS/TM4C123GH6PM.h:
 CMSIS/core_cm4.h:
 CMSIS/cmsis_version.h:
@@ -22,3 +23,5 @@ FreeRTOS/Source/portable/GCC/ARM_CM4F/portmacro.h:
 FreeRTOS/Source/include/mpu_wrappers.h:
 FreeRTOS/Source/include/task.h:
 FreeRTOS/Source/include/list.h:
+FreeRTOS/Source/include/queue.h:
+FreeRTOS/Source/include/task.h:

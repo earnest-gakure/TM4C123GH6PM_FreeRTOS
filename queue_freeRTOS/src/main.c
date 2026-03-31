@@ -5,19 +5,24 @@
 #include "queue.h"
 #include "stdio.h"
 
+#define MSG_LEN 30
+
 QueueHandle_t myQueue;
 
 //task function to send data to the queue
 void myTask1(void *p){
     char myTxBuff[30];
     //create queue
-    myQueue = xQueueCreate(5,sizeof(myTxBuff));
-    sprintf(myTxBuff, "message 1");
+   // myQueue = xQueueCreate(5,sizeof(myTxBuff));
+   while(1){
+    //sprintf(myTxBuffssage 1");
     xQueueSend(myQueue,myTxBuff, (TickType_t)0);
 
-    while(1){
+    vTaskDelay(pdMS_TO_TICKS(1000));
 
-    }
+   }
+
+   
 
 }
 
@@ -27,7 +32,7 @@ void myTask2(void *p){
     while(1){
         if(myQueue != 0){
             if( xQueueReceive(myQueue, (void*)myRxBuff, (TickType_t)5)){
-                printf("Data received : %s\r\n", myRxBuff);
+               // printf("Data received : %s\r\n", myRxBuff);
             }
         }
     }
@@ -47,6 +52,7 @@ void gpio_init(){
 
 int main(void)
 {
+    myQueue = xQueueCreate(5,sizeof(char([MSG_LEN]))); 
     xTaskCreate(myTask1,  "task 1", 256, NULL, 1, NULL);
     xTaskCreate(myTask2,  "task 2", 256, NULL, 1 ,NULL );
     
