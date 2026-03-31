@@ -19,6 +19,7 @@ void gpio_init(){
 
     GPIOF->DIR |= (1<<1) | (1<<2) | (1<<3);
     GPIOF->DEN |= (1<<1) | (1<<2) | (1<<3);
+    GPIOF->DATA &= ~( (1<<1) | (1<<2) | (1<<3));
 
 }
 /* callback function*/
