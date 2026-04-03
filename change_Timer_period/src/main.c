@@ -60,17 +60,17 @@ void switch_callback(TimerHandle_t xTimer){
             {
                 case  0:
                     //noraml state
-                    change_timer_period(500, 1000, 1500);
+                    change_timer_period(2000, 2000, 2000);
                     
                     break;
                 case  1:
                     //boost1 state
-                    change_timer_period(200, 2000, 3000);
+                    change_timer_period(100, 100, 100);
                     
                     break;
                 case  2:
                     //boost2 state
-                    change_timer_period(2000, 2000, 2000);
+                    change_timer_period(500, 500, 500);
                     
                     break;
             }
@@ -87,16 +87,6 @@ void switch_callback(TimerHandle_t xTimer){
                 case  0:
                     //noraml state
                     change_timer_period(2000, 2000, 2000);
-                    
-                    break;
-                case  1:
-                    //boost1 state
-                    change_timer_period(500, 1000, 1500);
-                    
-                    break;
-                case  2:
-                    //boost2 state
-                    change_timer_period(500, 2000, 2000);
                     
                     break;
             }
@@ -196,5 +186,3 @@ int main(void)
     vTaskStartScheduler();
     while (1);
 }
-
-
